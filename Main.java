@@ -11,10 +11,10 @@ public class Main {
 			System.out.println("사용하실 포트를 입력해주세요");
 			int port = sc.nextInt();
 			System.out.println("이름을 입력해주세요");
-			sc.nextLine();
+			sc.nextLine(); //남은 버퍼 지우기
 			String name = sc.nextLine();
 			Server server = new Server(port,name);
-			server.run();
+			server.start();
 		}else { //클라이언트라면
 			sc.nextLine();
 			System.out.println("접속하실 IP를 입력해주세요");

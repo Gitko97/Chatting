@@ -15,10 +15,10 @@ public class Receiver extends Thread implements NetworkFunc{
 	}
 	
 	public void run() {
-		Scanner scanner = new Scanner(System.in);
-		while(in!=null) {
+		Scanner scanner = new Scanner(System.in); //cmd창의 입력을 받아
+		while(in!=null) { //받아온 stream이 null일때까지
 			try {
-				System.out.println(in.readUTF());
+				System.out.println(in.readUTF()); //계속 받아와서 출력!
 			}catch (IOException e) {e.printStackTrace();}
 		}
 	}

@@ -1,35 +1,73 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Scanner;
 //서버의 실행
-class Server extends Thread {
+class Server {
+	static HashMap clients;
+	ServerSocket serverSocket = null;
+	Socket socket = null;
 	private int port;
-	private String name;
-	
-	public String getname() {
-		return name;
-	}
 	Server(int port,String name){
 		this.port = port;
-		this.name = name;
+		clients = new HashMap();
+		Collections.synchronizedMap(clients);
 	}
 	
-	public void run() {
+	public void start() {
 		try {
-			ServerSocket serverSocket = new ServerSocket(port); //네트워크 소켓을 생성
-			Socket socket = null;
-			System.out.println("서버가 준비되었습니다!"); 
-			socket = serverSocket.accept(); //여기서 client의 접속을 기다리게 된다... 접속 전까지 뒤에꺼 실행 안됨
-			Sender sender = new Sender(socket, getname());
-			Receiver receiver = new Receiver(socket);
-			
-			sender.start();
-			receiver.start();
-		
+			serverSocket = new ServerSocket(port);
+			System.out.println("서버 시작!");
+			while(true) {
+				socket = serverSocket.accept();
+				System.out.println("["+socket.getInetAddress()+"] 에서 접속하셨습니다.");
+				ServerFun serverFun = new ServerFun(socket);
+				serverFun.start();
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 }
 
+class ServerFun extends Thread implements NetworkFunc{
+	Socket socket;
+	DataOutputStream out;
+	DataInputStream in;
+	ServerFun(Socket socket){
+		this.socket = socket;
+		try {
+			out = new DataOutputStream(socket.getOutputStream());//만든 소켓에서 data를 보내기위한 stream을 생성한다. 만약 이것이 파일을 주고받는거면 FileOutputStream으로 생성
+			in = new DataInputStream(socket.getInputStream());
+		}catch (IOException e) {e.printStackTrace();}
+	}
+	
+	void sendToAll(String msg) {
+		Iterator it = Server.clients.keySet().iterator();
+		while(it.hasNext()) {
+			try {
+				DataOutputStream out = (DataOutputStream)Server.clients.get(it.next());
+				out.writeUTF(msg);
+			}catch (IOException e) {e.printStackTrace();}
+		}
+	}
+	public void run() {
+		String name="";
+		
+		try {
+			name = in.readUTF();
+			sendToAll("["+name+"] 님이 접속하셨습니다.");
+			Server.clients.put(name, out);
+			while(in!=null) {
+				sendToAll(in.readUTF());
+			}
+		}catch (IOException e) {e.printStackTrace();}
+		finally {
+			sendToAll("["+name+"] 님이 나가셨습니다.");
+			Server.clients.remove(name);
+		}
+	}
+}
