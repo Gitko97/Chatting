@@ -35,19 +35,32 @@ class Client { //쓰레드로 실행됩니다.
 	}
 }
 
-
 class ClientSender extends Thread implements NetworkFunc{
 	Socket socket;
 	DataOutputStream out;
 	String name;
-	FileReceive filereceive;
 	ClientSender(Socket socket,String name){
 		this.socket = socket;
 		try {
 			out = new DataOutputStream(socket.getOutputStream());//만든 소켓에서 data를 보내기위한 stream을 생성한다. 만약 이것이 파일을 주고받는거면 FileOutputStream으로 생성
-			filereceive = new FileReceive(socket, "C:\\coding_JJH\\B.txt");
 			this.name= name;
 		}catch (IOException e) {e.printStackTrace();}
+	}
+	
+	
+	void ask_fileSend(String msg) {
+		try {
+			out.writeUTF(msg);
+			out.writeUTF("주석 전송!");
+			out.writeUTF("파일 내용전송!");
+		} catch (IOException e) {	e.printStackTrace();}
+	}
+	
+	void ask_fileDown(String msg) {
+		try {
+			out.writeUTF(msg);
+			out.writeUTF(name);
+		} catch (IOException e) {	e.printStackTrace();}
 	}
 	
 	public void run() {
@@ -56,11 +69,10 @@ class ClientSender extends Thread implements NetworkFunc{
 		try {
 			if(out!=null)	out.writeUTF(name);			
 			while(out!=null) {
-				String string = sc.nextLine();
-				if(string.equals("#file#")) {
-					filereceive.run();
-				}
-				else out.writeUTF("["+name+"] "+string);
+				String msg = sc.nextLine();
+				if(msg.equals("#fileUp#")) {ask_fileSend(msg);} //내가 파일 업로드함
+				else if(msg.equals("#fileDown#")) {ask_fileDown(msg);} //파일 다운로드 요청!
+				else out.writeUTF("["+name+"] "+msg);
 			}
 		}catch (IOException e) {e.printStackTrace();}
 		
@@ -77,41 +89,20 @@ class ClientReceiver extends Thread implements NetworkFunc{
 		}catch (IOException e) {e.printStackTrace();}
 	}
 	
+	void ReadFile() {
+		
+	}
+	
 	public void run() {
 		while(in!=null) {
 				try {	
-					System.out.println(in.readUTF());
+					//String mode = in.readUTF();
+					//System.out.println(mode); //주석들 받고
+					String msg =in.readUTF();
+					System.out.println("오예");
+					if(msg.equals("#fileDown#")) {System.out.println("수신완료!");}
+					else System.out.println(msg);
 			}catch (IOException e) {e.printStackTrace();}
 		}
 	}
-}
-
-class FileReceive extends Thread implements NetworkFunc{
-	String filename;
-	Socket socket;
-	FileOutputStream fos;
-    DataInputStream is;
-
-    FileReceive(Socket socket, String file){
-    	this.socket = socket;
-    	filename = file;
-    	try {
-    		is= new DataInputStream(socket.getInputStream());
-			fos = new FileOutputStream(filename);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-    }
-    
-    public synchronized void run() {
-    	byte[] buffer = new byte[1024];
-        int readBytes;
-        try {
-        	while ((readBytes = is.read(buffer)) != -1) {
-        		fos.write(buffer, 0, readBytes);
-        	}      
-        	fos.flush();
-        }catch(Exception e) {}
-
-    }
 }

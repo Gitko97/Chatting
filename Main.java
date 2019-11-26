@@ -7,22 +7,19 @@ public class Main {
 		int mode = sc.nextInt();
 		
 		if(mode == 1) {//서버라면
-			sc.nextLine();
-			System.out.println("사용하실 포트를 입력해주세요");
-			int port = sc.nextInt();
-			System.out.println("이름을 입력해주세요");
-			sc.nextLine(); //남은 버퍼 지우기
-			String name = sc.nextLine();
-			Server server = new Server(port,name);
+			//sc.nextLine();
+			//System.out.println("사용하실 포트를 입력해주세요");
+			int port = 7777;//sc.nextInt();
+			Server server = new Server(port);
 			server.start();
 		}else { //클라이언트라면
 			sc.nextLine();
-			System.out.println("접속하실 IP를 입력해주세요");
-			String serverIP = sc.nextLine();
+			//System.out.println("접속하실 IP를 입력해주세요");
+			String serverIP = "10.210.130.90";//sc.nextLine();
 			System.out.println("이름을 입력해주세요");
 			String name = sc.nextLine();
-			System.out.println("접속하실 포트를 입력해주세요");
-			int port = sc.nextInt();
+			//System.out.println("접속하실 포트를 입력해주세요");
+			int port = 7777;///sc.nextInt();
 			Client client = new Client(serverIP,port,name);
 			client.run();
 		}
